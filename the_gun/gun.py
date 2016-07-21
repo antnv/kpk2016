@@ -1,9 +1,10 @@
 from tkinter import *
 from random import choice, randint
-
+import math
 screen_width = 400
 screen_height = 300
 timer_delay = 100
+stvol=50
 
 class Ball:
     initial_number = 20
@@ -61,16 +62,19 @@ class Gun:
                                           self._x+self._lx,
                                           self._y+self._ly)
 
+
+
     def shoot(self):
         """
         :return возвращает объект снаряда (класса Ball)
         """
         shell = Ball()
+        shell._R = 5
         shell._x = self._x + self._lx
-        shell._y = self._y + self._ly
+        shell._y = self._y + self._ly- shell._R
         shell._Vx = self._lx/10
         shell._Vy = self._ly/10
-        shell._R = 5
+
         shell.fly()
         return shell
 
@@ -96,6 +100,7 @@ def init_main_window():
     canvas.grid(row=1, column=0, columnspan=3)
     scores_text.grid(row=0, column=2)
     canvas.bind('<Button-1>', click_event_handler)
+    canvas.bind('<Button-3>', change)
 
 
 def timer_event():
@@ -104,6 +109,15 @@ def timer_event():
         ball.fly()
     for shell in shells_on_fly:
         shell.fly()
+        for ball in balls:
+            if ball._x<shell._x<ball._x+ball._R*2 and  ball._x<shell._x+2*shell._R<ball._x+ball._R*2  and ball._y-ball._R*2<shell._y<ball._y and ball._y-ball._R*2<shell._y-2*shell._R<ball._y:
+                #canvas.coords(ball._avatar, ball._x,screen_height-1-2*ball._R,ball._x + 2*ball._R,screen_height-1)
+                canvas.coords(ball._avatar, ball._x,screen_height-1-2,ball._x + 2,screen_height-1)
+                balls.remove(ball)
+                canvas.coords(shell._avatar, shell._x,screen_height-1-2,shell._x + 2,screen_height-1)
+                shells_on_fly.remove(shell)
+                break
+
     canvas.after(timer_delay, timer_event)
 
 
@@ -111,6 +125,16 @@ def click_event_handler(event):
     global shells_on_fly
     shell = gun.shoot()
     shells_on_fly.append(shell)
+
+
+def change(event):
+          x = canvas.canvasx(event.x)
+          y = screen_height-canvas.canvasy(event.y)
+          alpha=math.atan(y/x)
+          gun._lx= int( stvol * math.cos(alpha))
+          gun._ly =-int( stvol * math.sin(alpha))
+          canvas.coords(gun._avatar ,gun._x, gun._y,gun._x+gun._lx,gun._y+gun._ly)
+
 
 if __name__ == "__main__":
     init_main_window()
